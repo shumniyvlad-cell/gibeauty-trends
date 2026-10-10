@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>GI Beauty — тренды Reels</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Tenor+Sans&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=4">
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="./" aria-label="GI Beauty, тренды Reels">
+    <span class="brand-mark">GI BEAUTY</span>
+    <span class="brand-sub">тренды Reels</span>
+  </a>
+  <p class="top-meta" id="meta"></p>
+</header>
+
+<div class="layout">
+  <nav class="rail" id="rail" aria-label="Запросы"></nav>
+
+  <main class="main">
+    <div class="head">
+      <h1 id="title">Все запросы</h1>
+      <p class="head-sub" id="subtitle"></p>
+    </div>
+
+    <div class="tools">
+      <div class="seg" id="statusFilter" role="group" aria-label="Статус"></div>
+      <label class="field">
+        <span>Сортировка</span>
+        <select id="sort">
+          <option value="plays">По просмотрам</option>
+          <option value="perday">Просмотры в день</option>
+          <option value="er">По вовлечённости</option>
+          <option value="new">Сначала свежие</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Опубликовано</span>
+        <select id="period">
+          <option value="0">За всё время</option>
+          <option value="30">За 30 дней</option>
+          <option value="90">За 90 дней</option>
+          <option value="365">За год</option>
+        </select>
+      </label>
+      <label class="field field-search">
+        <span>Поиск</span>
+        <input id="search" type="search" placeholder="Автор или текст подписи">
+      </label>
+      <button class="btn" id="export" type="button">Скачать список «В работу»</button>
+    </div>
+
+    <div class="grid" id="grid"></div>
+    <p class="empty" id="empty" hidden></p>
+  </main>
+</div>
+
+<dialog class="sheet" id="sheet" aria-labelledby="sheetAuthor">
+  <button class="sheet-close" id="sheetClose" type="button" aria-label="Закрыть">×</button>
+  <div class="sheet-body" id="sheetBody"></div>
+</dialog>
+
+<script src="app.js?v=4"></script>
+</body>
+</html>
