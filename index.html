@@ -20,15 +20,22 @@
   <p class="top-meta" id="meta"></p>
 </header>
 
+<section class="hero">
+  <div class="hero-text">
+    <h1 id="title">Все запросы</h1>
+    <dl class="hero-stats" id="stats"></dl>
+    <p class="hero-sub" id="subtitle"></p>
+  </div>
+  <img class="hero-photo" id="heroPhoto" src="img/all.jpg" alt="">
+</section>
+
+<!-- молния косметички: бегунок проезжает при смене запроса -->
+<div class="zip-wrap" aria-hidden="true"><div class="zip"></div><span class="zip-pull"></span></div>
+
 <div class="layout">
   <nav class="rail" id="rail" aria-label="Запросы"></nav>
 
   <main class="main">
-    <div class="head">
-      <h1 id="title">Все запросы</h1>
-      <p class="head-sub" id="subtitle"></p>
-    </div>
-
     <div class="tools">
       <div class="seg" id="statusFilter" role="group" aria-label="Статус"></div>
       <label class="field">

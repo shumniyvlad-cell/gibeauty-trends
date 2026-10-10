@@ -101,7 +101,15 @@ function pick(q) {
   history.replaceState(null, '', q ? '#' + encodeURIComponent(q) : location.pathname);
   renderRail();
   render();
+  runZip();
   window.scrollTo({ top: 0 });
+}
+
+function runZip() {
+  const pull = document.querySelector('.zip-pull');
+  pull.classList.remove('is-running');
+  void pull.offsetWidth;
+  pull.classList.add('is-running');
 }
 
 /* выдача */
@@ -136,19 +144,28 @@ function render() {
 
   const inQuery = reels.filter((r) => view.query === null || r.queries.includes(view.query));
   const best = inQuery.reduce((m, r) => Math.max(m, r.plays), 0);
-  $('subtitle').textContent = inQuery.length
-    ? `${rolikov(inQuery.length)} в подборке, самый популярный набрал ${short(best)} просмотров.` +
-      (view.query && collected[view.query] ? ` Собрано ${dateOf(collected[view.query])}.` : '')
-    : '';
+  const fresh = inQuery.filter((r) => days(r) <= 90).length;
+  const stat = (v, k) => el('div', {}, el('dt', {}, k), el('dd', {}, v));
+  $('stats').replaceChildren(
+    stat(String(inQuery.length), plural(inQuery.length, ['ролик', 'ролика', 'роликов']) + ' в подборке'),
+    stat(short(best), 'просмотров у лидера'),
+    stat(String(fresh), 'вышли за последние 90 дней'));
+  $('subtitle').textContent = view.query && collected[view.query] ? `Собрано ${dateOf(collected[view.query])}` : '';
+
+  const group = groups.find((g) => g.queries.includes(view.query));
+  const photo = group?.photo || 'img/all.jpg';
+  if ($('heroPhoto').getAttribute('src') !== photo) $('heroPhoto').src = photo;
 
   $('grid').replaceChildren(...list.map((r, i) => {
     const s = statusOf(r.code);
     const c = cover(r);
     if (STATUS_TAG[s]) c.append(el('span', { class: 'tag', 'data-s': s }, STATUS_TAG[s]));
-    c.append(el('span', { class: 'rank' }, String(i + 1)));
-    return el('button', { class: 'card', type: 'button', 'data-s': s, onclick: () => openSheet(r) },
+    c.append(el('span', { class: 'onphoto' },
+      el('span', { class: 'views' }, short(r.plays), el('small', {}, 'просмотров')),
+      el('span', { class: 'rank' }, String(i + 1))));
+    const lead = i === 0 && list.length > 4;
+    return el('button', { class: 'card' + (lead ? ' is-lead' : ''), type: 'button', 'data-s': s, onclick: () => openSheet(r) },
       c,
-      el('span', { class: 'views' }, short(r.plays), ' ', el('small', {}, 'просмотров')),
       el('span', { class: 'who' }, '@' + r.user),
       el('span', { class: 'nums' }, `${short(Math.round(perDay(r)))} в день, ${erText(r)}`),
       el('span', { class: 'nums' }, age(r)));
@@ -249,8 +266,14 @@ async function start() {
   $('sheetClose').addEventListener('click', () => $('sheet').close());
   $('sheet').addEventListener('click', (e) => { if (e.target === $('sheet')) $('sheet').close(); });
 
+  // ?motion=1 включает анимацию там, где система просит её убрать
+  if (matchMedia('(prefers-reduced-motion: no-preference)').matches || new URLSearchParams(location.search).has('motion')) {
+    document.documentElement.classList.add('motion');
+  }
+
   renderRail();
   render();
+  runZip();
 }
 
 start();
