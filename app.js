@@ -14,7 +14,7 @@ let groups = [];
 let reels = [];
 let collected = {};
 let marks = loadMarks();
-const view = { query: null, status: 'all', sort: 'plays', period: 0, search: '' };
+const view = { market: 'foreign', query: null, status: 'all', sort: 'plays', period: 0, search: '', videoOnly: false };
 
 function loadMarks() {
   try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { return {}; }
@@ -23,6 +23,11 @@ function saveMarks() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(marks)); return true; } catch { return false; }
 }
 const statusOf = (code) => marks[code]?.status || 'new';
+
+// два рынка: зарубежные запросы и русские, у каждой группы свой список
+const MARKETS = [{ id: 'foreign', label: 'Зарубежные' }, { id: 'queries', label: 'Русские' }];
+const marketQueries = () => groups.flatMap((g) => g[view.market]);
+const inScope = (r) => (view.query === null ? r.queries.some((q) => marketQueries().includes(q)) : r.queries.includes(view.query));
 
 function short(n) {
   if (n == null) return '—';
@@ -78,13 +83,17 @@ function cover(r) {
 function renderRail() {
   const rail = $('rail');
   rail.replaceChildren(
+    el('div', { class: 'seg rail-market', role: 'group', 'aria-label': 'Рынок' }, ...MARKETS.map((m) => el('button', {
+      type: 'button', 'aria-pressed': String(view.market === m.id),
+      onclick: () => { view.market = m.id; pick(null); },
+    }, m.label))),
     el('button', { class: 'rail-all', type: 'button', 'aria-current': String(view.query === null), onclick: () => pick(null) },
-      'Все запросы', el('small', {}, String(reels.length))),
+      'Все запросы', el('small', {}, String(reels.filter((r) => r.queries.some((q) => marketQueries().includes(q))).length))),
   );
   for (const g of groups) {
     const box = el('section', { class: 'rail-group' },
       el('h2', {}, el('span', { class: 'swatch', style: `background:${g.swatch}` }), g.name));
-    for (const q of g.queries) {
+    for (const q of g[view.market]) {
       const n = reels.filter((r) => r.queries.includes(q)).length;
       const ready = q in collected;
       box.append(el('button', {
@@ -117,16 +126,17 @@ function runZip() {
 function visible() {
   const needle = view.search.trim().toLowerCase();
   const list = reels.filter((r) =>
-    (view.query === null || r.queries.includes(view.query)) &&
+    inScope(r) &&
     (view.status === 'all' || statusOf(r.code) === view.status) &&
     (!view.period || days(r) <= view.period) &&
+    (!view.videoOnly || r.video) &&
     (!needle || (r.user + ' ' + (r.name || '') + ' ' + (r.caption || '')).toLowerCase().includes(needle)));
   const by = { plays: (r) => r.plays, perday: perDay, er, new: (r) => r.taken }[view.sort];
   return list.sort((a, b) => by(b) - by(a));
 }
 
 function renderStatusFilter() {
-  const inQuery = reels.filter((r) => view.query === null || r.queries.includes(view.query));
+  const inQuery = reels.filter(inScope);
   const items = [{ id: 'all', label: 'Все' }, ...STATUSES];
   $('statusFilter').replaceChildren(...items.map((s) => {
     const n = s.id === 'all' ? inQuery.length : inQuery.filter((r) => statusOf(r.code) === s.id).length;
@@ -140,9 +150,9 @@ function renderStatusFilter() {
 function render() {
   renderStatusFilter();
   const list = visible();
-  $('title').textContent = view.query || 'Все запросы';
+  $('title').textContent = view.query || (view.market === 'foreign' ? 'Зарубежные тренды' : 'Русские тренды');
 
-  const inQuery = reels.filter((r) => view.query === null || r.queries.includes(view.query));
+  const inQuery = reels.filter(inScope);
   const best = inQuery.reduce((m, r) => Math.max(m, r.plays), 0);
   const fresh = inQuery.filter((r) => days(r) <= 90).length;
   const stat = (v, k) => el('div', {}, el('dt', {}, k), el('dd', {}, v));
@@ -152,7 +162,7 @@ function render() {
     stat(String(fresh), 'вышли за последние 90 дней'));
   $('subtitle').textContent = view.query && collected[view.query] ? `Собрано ${dateOf(collected[view.query])}` : '';
 
-  const group = groups.find((g) => g.queries.includes(view.query));
+  const group = groups.find((g) => g.queries.includes(view.query) || g.foreign.includes(view.query));
   const photo = group?.photo || 'img/all.jpg';
   if ($('heroPhoto').getAttribute('src') !== photo) $('heroPhoto').src = photo;
 
@@ -160,6 +170,7 @@ function render() {
     const s = statusOf(r.code);
     const c = cover(r);
     if (STATUS_TAG[s]) c.append(el('span', { class: 'tag', 'data-s': s }, STATUS_TAG[s]));
+    if (r.video) c.append(el('span', { class: 'playmark', title: 'Можно смотреть на сайте' }));
     c.append(el('span', { class: 'onphoto' },
       el('span', { class: 'views' }, short(r.plays), el('small', {}, 'просмотров')),
       el('span', { class: 'rank' }, String(i + 1))));
@@ -206,10 +217,10 @@ function openSheet(r) {
   const stat = (k, v) => el('div', {}, el('dt', {}, k), el('dd', {}, v));
   $('sheetBody').replaceChildren(
     el('div', { class: 'player-col' },
-      // плеер Instagram встраивается поверх обложки: пока он грузится, видна она
-      el('div', { class: 'player', style: r.thumb ? `background-image:url(thumbs/${r.code}.jpg)` : null },
-        el('iframe', { src: `https://www.instagram.com/reel/${r.code}/embed/`, title: 'Ролик @' + r.user, loading: 'lazy', allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen', allowfullscreen: '' })),
-      el('p', { class: 'player-note' }, 'Ролик играет прямо здесь. Если окно пустое, включите VPN: без него Instagram не загружается.')),
+      r.video
+        ? el('video', { class: 'player', src: `videos/${r.code}.mp4`, poster: r.thumb ? `thumbs/${r.code}.jpg` : null, controls: '', autoplay: '', loop: '', playsinline: '', preload: 'metadata' })
+        : el('div', { class: 'player player-still', style: r.thumb ? `background-image:url(thumbs/${r.code}.jpg)` : null }),
+      r.video ? null : el('p', { class: 'player-note' }, 'Видео для этого ролика ещё не загружено на сайт. Посмотреть его можно в Instagram.')),
     el('div', { class: 'info-col' },
     el('h2', { class: 'sheet-author', id: 'sheetAuthor' }, '@' + r.user),
     el('p', { class: 'sheet-name' }, [r.name, dateOf(r.taken), r.dur ? r.dur + ' сек.' : null].filter(Boolean).join(', ')),
@@ -262,10 +273,14 @@ async function start() {
     return;
   }
   const fromHash = decodeURIComponent(location.hash.slice(1));
-  if (fromHash in collected) view.query = fromHash;
+  if (fromHash in collected) {
+    view.query = fromHash;
+    view.market = groups.some((g) => g.foreign.includes(fromHash)) ? 'foreign' : 'queries';
+  }
 
   $('sort').addEventListener('change', (e) => { view.sort = e.target.value; render(); });
   $('period').addEventListener('change', (e) => { view.period = Number(e.target.value); render(); });
+  $('videoOnly').addEventListener('change', (e) => { view.videoOnly = e.target.checked; render(); });
   $('search').addEventListener('input', (e) => { view.search = e.target.value; render(); });
   $('export').addEventListener('click', exportWork);
   $('sheetClose').addEventListener('click', () => $('sheet').close());

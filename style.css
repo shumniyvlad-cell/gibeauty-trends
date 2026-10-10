@@ -163,6 +163,8 @@ button, select, input, textarea { font: inherit; color: inherit; }
 }
 
 .rail-all { font-weight: 700; margin-bottom: 22px; }
+.rail-market { display: flex; flex-wrap: nowrap; margin-bottom: 18px; }
+.rail-market button { flex: 1; padding: 7px 8px; }
 .rail-q:hover, .rail-all:hover { background: var(--powder); }
 .rail-q[aria-current="true"], .rail-all[aria-current="true"] { background: var(--ink); color: var(--paper); }
 .rail-q small, .rail-all small { font-size: 13px; opacity: 0.6; white-space: nowrap; }
@@ -359,7 +361,26 @@ button, select, input, textarea { font: inherit; color: inherit; }
   overflow: hidden;
   background: var(--powder) center / cover no-repeat;
 }
-.player iframe { display: block; width: 100%; height: 100%; border: 0; }
+.player { display: block; width: 100%; }
+video.player { background: #000; object-fit: contain; }
+
+.check { display: flex; align-items: center; gap: 8px; height: 42px; cursor: pointer; white-space: nowrap; }
+.check input { width: 18px; height: 18px; accent-color: var(--ink); }
+
+/* метка на обложке: ролик можно посмотреть прямо на сайте */
+.playmark {
+  position: absolute; right: 10px; top: 10px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+}
+.playmark::after {
+  content: "";
+  position: absolute; left: 12px; top: 9px;
+  border: 6px solid transparent;
+  border-left: 10px solid var(--ink);
+  border-right: 0;
+}
 .player-note { margin: 10px 2px 0; font-size: 13px; color: var(--taupe); }
 .sheet-author { margin: 0; font: 400 28px/1.15 var(--display); overflow-wrap: anywhere; }
 .sheet-name { margin: 6px 0 18px; color: var(--taupe); font-size: 14px; }
@@ -418,6 +439,7 @@ button, select, input, textarea { font: inherit; color: inherit; }
     padding: 16px 16px 4px;
     scrollbar-width: none;
   }
+  .rail-market { flex: none; margin: 0; }
   .rail-group { display: contents; }
   .rail-group h2 { display: none; }
   .rail-all, .rail-q { width: auto; flex: none; margin: 0; background: var(--powder); white-space: nowrap; }

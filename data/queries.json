@@ -10,7 +10,13 @@
         "косметичка в дорогу",
         "органайзер для косметики"
       ],
-      "photo": "img/bags.jpg"
+      "photo": "img/bags.jpg",
+      "foreign": [
+        "makeup bag",
+        "vanity case",
+        "travel makeup bag",
+        "makeup organizer"
+      ]
     },
     {
       "id": "brushes",
@@ -20,7 +26,11 @@
         "кисти для макияжа",
         "набор кистей"
       ],
-      "photo": "img/brushes.jpg"
+      "photo": "img/brushes.jpg",
+      "foreign": [
+        "makeup brushes",
+        "makeup brush set"
+      ]
     },
     {
       "id": "sponges",
@@ -30,7 +40,11 @@
         "спонж для макияжа",
         "домик для спонжа"
       ],
-      "photo": "img/sponges.jpg"
+      "photo": "img/sponges.jpg",
+      "foreign": [
+        "makeup sponge",
+        "makeup sponge holder"
+      ]
     },
     {
       "id": "mirror",
@@ -40,7 +54,11 @@
         "зеркало для макияжа",
         "зеркало с подсветкой"
       ],
-      "photo": "img/mirror.jpg"
+      "photo": "img/mirror.jpg",
+      "foreign": [
+        "makeup mirror",
+        "led vanity mirror"
+      ]
     },
     {
       "id": "care",
@@ -50,7 +68,11 @@
         "мыло для кистей",
         "как мыть кисти"
       ],
-      "photo": "img/care.jpg"
+      "photo": "img/care.jpg",
+      "foreign": [
+        "brush cleaning soap",
+        "how to clean makeup brushes"
+      ]
     }
   ]
 }

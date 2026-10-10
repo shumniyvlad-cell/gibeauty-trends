@@ -2,7 +2,7 @@
 """Собирает выдачу Reels по запросам из data/queries.json через HikerAPI.
 
 Ключ лежит в .env (HIKER_KEY). Один запрос к API = одна страница, 12 роликов.
-Запуск: python3 tools/collect.py [страниц на запрос, по умолчанию 3]
+Запуск: python3 tools/collect.py [страниц на запрос, по умолчанию 3] [запрос ...]
 """
 import json, pathlib, sys, time, urllib.parse, urllib.request
 
@@ -30,6 +30,7 @@ def pick(m):
     sound = cm.get("original_sound_info") or {}
     user = m.get("user") or {}
     images = (m.get("image_versions2") or {}).get("candidates") or []
+    videos = m.get("video_versions") or []
     return {
         "code": m.get("code"),
         "plays": m.get("play_count") or m.get("ig_play_count"),
@@ -45,14 +46,18 @@ def pick(m):
         "audio": f"{music.get('display_artist')} — {music.get('title')}" if music.get("title") else sound.get("original_audio_title"),
         # ссылка на обложку живёт несколько дней, build.py скачивает её сразу
         "thumb_url": images[0]["url"] if images else None,
+        # самая лёгкая версия файла: для просмотра внутри сайта её хватает
+        "video_url": min(videos, key=lambda v: (v.get("width") or 0) * (v.get("height") or 0))["url"] if videos else None,
     }
 
 
 def main():
     pages = int(sys.argv[1]) if len(sys.argv) > 1 else 3
     key = env_key()
-    queries = [q for g in json.loads((ROOT / "data" / "queries.json").read_text())["groups"] for q in g["queries"]]
-    out_path = ROOT / "raw" / f"{time.strftime('%Y-%m-%d')}-hiker.json"
+    groups = json.loads((ROOT / "data" / "queries.json").read_text())["groups"]
+    # запросы можно перечислить в аргументах, иначе берутся все: русские и зарубежные
+    queries = sys.argv[2:] or [q for g in groups for q in g["foreign"] + g["queries"]]
+    out_path = ROOT / "raw" / f"{time.strftime('%Y-%m-%d-%H%M')}-hiker.json"
     out = json.loads(out_path.read_text()) if out_path.exists() else {}
     spent = 0
     for q in queries:
@@ -77,7 +82,11 @@ def main():
         out[q] = items
         out_path.write_text(json.dumps(out, ensure_ascii=False))
         print(f"{q}: {len(items)}")
-    print("запросов к API:", spent, "| остаток:", get("/sys/balance", key))
+    print("запросов к API:", spent)
+    try:
+        print("остаток:", get("/sys/balance", key))
+    except Exception as e:
+        print("баланс не прочитался:", e)
 
 
 if __name__ == "__main__":

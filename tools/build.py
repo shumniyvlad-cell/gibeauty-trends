@@ -16,6 +16,7 @@ def main():
     reels = {r["code"]: r for r in prev["reels"]}
     collected = dict(prev.get("collected", {}))
     urls = {}  # свежие ссылки на обложки из выгрузки API
+    video_urls = {}
 
     for raw in sorted((ROOT / "raw").glob("*.json")):
         stamp = int(raw.stat().st_mtime)
@@ -30,6 +31,8 @@ def main():
                     r["shares"] = it["shares"]
                 if it.get("thumb_url"):
                     urls[it["code"]] = it["thumb_url"]
+                if it.get("video_url"):
+                    video_urls[it["code"]] = it["video_url"]
                 if query not in r["queries"]:
                     r["queries"].append(query)
                 # снимки просмотров: по ним считается скорость роста между сборами
@@ -53,6 +56,21 @@ def main():
             if not direct:
                 time.sleep(2 + random.random() * 2)
         r["thumb"] = thumb.exists()
+
+        # видео для плеера на сайте: качаем, пока ссылка жива, и ужимаем до 360p
+        video = ROOT / "videos" / f"{code}.mp4"
+        if not video.exists() and code in video_urls:
+            src = ROOT / "raw" / f"{code}.src.mp4"
+            subprocess.run(["curl", "-s", "-L", "-m", "120", "-A", UA, "-o", str(src), video_urls[code]])
+            if src.exists() and src.stat().st_size > 20000:
+                subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src),
+                                "-vf", "scale=360:-2", "-c:v", "libx264", "-preset", "veryfast", "-crf", "33",
+                                "-c:a", "aac", "-b:a", "48k", "-ac", "1", "-movflags", "+faststart", str(video)])
+            src.unlink(missing_ok=True)
+            if video.exists() and video.stat().st_size < 20000:
+                video.unlink()
+            print(code, "видео" if video.exists() else "видео не скачалось", flush=True)
+        r["video"] = video.exists()
 
     out_path.write_text(json.dumps({"updated": max(collected.values(), default=int(time.time())),
                                     "collected": collected,
