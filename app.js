@@ -39,7 +39,7 @@ const pct = (x) => (x * 100).toFixed(1).replace('.', ',') + '%';
 // автор скрыл счётчик лайков: Instagram отдаёт вместо него заглушку «3»
 const likesHidden = (r) => r.likes != null && r.likes <= 3 && r.plays > 1000;
 const erText = (r) => (likesHidden(r) ? 'лайки скрыты' : 'вовлечённость ' + pct(er(r)));
-const dateOf = (ts) => new Date(ts * 1000).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+const dateOf = (ts) => new Date(ts * 1000).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).replace(' г.', '');
 
 function age(r) {
   const d = Math.floor(days(r));
