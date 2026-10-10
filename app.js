@@ -34,7 +34,7 @@ function short(n) {
 const full = (n) => (n == null ? '—' : n.toLocaleString('ru-RU'));
 const days = (r) => Math.max(1, (now - r.taken) / 86400);
 const perDay = (r) => r.plays / days(r);
-const er = (r) => (r.plays ? ((r.likes || 0) + (r.comments || 0)) / r.plays : 0);
+const er = (r) => (r.plays ? ((r.likes || 0) + (r.comments || 0) + (r.shares || 0)) / r.plays : 0);
 const pct = (x) => (x * 100).toFixed(1).replace('.', ',') + '%';
 // автор скрыл счётчик лайков: Instagram отдаёт вместо него заглушку «3»
 const likesHidden = (r) => r.likes != null && r.likes <= 3 && r.plays > 1000;
@@ -205,26 +205,31 @@ function openSheet(r) {
 
   const stat = (k, v) => el('div', {}, el('dt', {}, k), el('dd', {}, v));
   $('sheetBody').replaceChildren(
-    el('div', { class: 'sheet-top' },
-      cover(r),
-      el('div', {},
-        el('h2', { class: 'sheet-author', id: 'sheetAuthor' }, '@' + r.user),
-        el('p', { class: 'sheet-name' }, [r.name, dateOf(r.taken), r.dur ? r.dur + ' сек.' : null].filter(Boolean).join(', ')),
-        el('a', { class: 'btn btn-solid', href: `https://www.instagram.com/reel/${r.code}/`, target: '_blank', rel: 'noopener' }, 'Открыть в Instagram'))),
+    el('div', { class: 'player-col' },
+      // плеер Instagram встраивается поверх обложки: пока он грузится, видна она
+      el('div', { class: 'player', style: r.thumb ? `background-image:url(thumbs/${r.code}.jpg)` : null },
+        el('iframe', { src: `https://www.instagram.com/reel/${r.code}/embed/`, title: 'Ролик @' + r.user, loading: 'lazy', allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen', allowfullscreen: '' })),
+      el('p', { class: 'player-note' }, 'Ролик играет прямо здесь. Если окно пустое, включите VPN: без него Instagram не загружается.')),
+    el('div', { class: 'info-col' },
+    el('h2', { class: 'sheet-author', id: 'sheetAuthor' }, '@' + r.user),
+    el('p', { class: 'sheet-name' }, [r.name, dateOf(r.taken), r.dur ? r.dur + ' сек.' : null].filter(Boolean).join(', ')),
+    el('a', { class: 'btn btn-solid', href: `https://www.instagram.com/reel/${r.code}/`, target: '_blank', rel: 'noopener' }, 'Открыть в Instagram'),
     el('h3', {}, 'Цифры'),
     el('dl', { class: 'stats' },
       stat('Просмотры', full(r.plays)),
-      stat('Просмотров в день', full(Math.round(perDay(r)))),
       stat('Лайки', likesHidden(r) ? 'скрыты автором' : full(r.likes)),
       stat('Комментарии', full(r.comments)),
+      stat('Репосты', full(r.shares)),
       stat('Вовлечённость', likesHidden(r) ? '—' : pct(er(r))),
-      stat('Звук', r.audio || 'оригинальный')),
+      stat('Просмотров в день', full(Math.round(perDay(r))))),
+    el('h3', {}, 'Звук'),
+    el('p', { class: 'caption' }, r.audio || 'Оригинальный звук автора'),
     el('h3', {}, 'Статус'), seg,
     el('h3', {}, 'Заметка'), note, saved,
     el('h3', {}, 'Нашёлся по запросам'),
     el('div', { class: 'chips' }, ...r.queries.map((q) => el('span', { class: 'chip' }, q))),
     el('h3', {}, 'Подпись'),
-    el('p', { class: 'caption' }, r.caption || 'Без подписи'),
+    el('p', { class: 'caption' }, r.caption || 'Без подписи')),
   );
   $('sheet').showModal();
   $('sheet').scrollTop = 0;
@@ -264,6 +269,8 @@ async function start() {
   $('search').addEventListener('input', (e) => { view.search = e.target.value; render(); });
   $('export').addEventListener('click', exportWork);
   $('sheetClose').addEventListener('click', () => $('sheet').close());
+  // убираем плеер при закрытии, иначе звук продолжит играть
+  $('sheet').addEventListener('close', () => $('sheetBody').replaceChildren());
   $('sheet').addEventListener('click', (e) => { if (e.target === $('sheet')) $('sheet').close(); });
 
   // ?motion=1 включает анимацию там, где система просит её убрать

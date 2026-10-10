@@ -323,7 +323,7 @@ button, select, input, textarea { font: inherit; color: inherit; }
 
 .sheet {
   margin: 0 0 0 auto;
-  width: min(560px, 100vw);
+  width: min(980px, 100vw);
   height: 100vh;
   max-height: 100vh;
   max-width: 100vw;
@@ -345,8 +345,22 @@ button, select, input, textarea { font: inherit; color: inherit; }
   z-index: 1;
 }
 
-.sheet-body { padding: 32px 36px 56px; }
-.sheet-top { display: grid; grid-template-columns: 170px 1fr; gap: 24px; align-items: end; }
+.sheet-body {
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 36px;
+  align-items: start;
+  padding: 32px 36px 56px;
+}
+.player-col { position: sticky; top: 24px; }
+.player {
+  height: min(760px, calc(100vh - 110px));
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--powder) center / cover no-repeat;
+}
+.player iframe { display: block; width: 100%; height: 100%; border: 0; }
+.player-note { margin: 10px 2px 0; font-size: 13px; color: var(--taupe); }
 .sheet-author { margin: 0; font: 400 28px/1.15 var(--display); overflow-wrap: anywhere; }
 .sheet-name { margin: 6px 0 18px; color: var(--taupe); font-size: 14px; }
 
@@ -418,7 +432,8 @@ button, select, input, textarea { font: inherit; color: inherit; }
   .field { flex: 1 1 140px; }
   .tools .btn { flex: 1 1 100%; }
 
-  .sheet-body { padding: 22px 16px 40px; }
-  .sheet-top { grid-template-columns: 120px 1fr; gap: 14px; }
+  .sheet-body { grid-template-columns: minmax(0, 1fr); gap: 22px; padding: 22px 16px 40px; }
+  .player-col { position: static; }
+  .player { height: 620px; max-width: 380px; margin: 0 auto; }
   .sheet-author { font-size: 20px; }
 }
