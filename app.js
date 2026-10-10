@@ -150,7 +150,7 @@ function renderStatusFilter() {
 function render() {
   renderStatusFilter();
   const list = visible();
-  $('title').textContent = view.query || (view.market === 'foreign' ? 'Зарубежные тренды' : 'Русские тренды');
+  $('title').textContent = view.query || (view.market === 'foreign' ? 'За рубежом' : 'Россия');
 
   const inQuery = reels.filter(inScope);
   const best = inQuery.reduce((m, r) => Math.max(m, r.plays), 0);
